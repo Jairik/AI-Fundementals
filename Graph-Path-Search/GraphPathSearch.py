@@ -1,9 +1,7 @@
 ''' - Main function - JJ McCauley - '''
 
 import timeit
-from uninformedsearch import bfs
-from uninformedsearch import dfs
-from uninformedsearch import ucs
+from uninformedsearch import uninformedsearch
 
 cities = {
     'Buffalo': {'Boston': 450, 'Pittsburg': 219},
@@ -23,14 +21,25 @@ cities = {
     'Norfolk': {'Richmond': 93, 'Salisbury': 132}
 }
 
-# BFS
-execution_time = timeit.timeit(lambda: bfs(cities, True, True), number=1)
-print("Execution time: ", execution_time, " seconds")
+# Getting start and end cities from user
+startCity = input("Enter Start City: ")
+while startCity not in cities:
+    startCity = input("ERROR - Start City not found. Please try again: ")
+endCity = input("Enter End City: ")
+while endCity not in cities:
+    endCity = input("ERROR - End city not found. Please try again: ")
 
-# DFS
-execution_time = timeit.timeit(lambda: dfs(cities, True, True), number=1)
-print("Execution time: ", execution_time, " seconds")
+# Create uninformedsearch object to use searches in module
+s = uninformedsearch()
 
-# UCS
-execution_time = timeit.timeit(lambda: ucs(cities, True, True), number=1)
-print("Execution time: ", execution_time, " seconds")
+# Breadth First Search
+execution_time1 = timeit.timeit(lambda: s.bfs(cities, startCity, endCity, pr_path=True, pr_totDist=True), number=1)
+print("Execution time: ", execution_time1)
+
+# Depth First Search
+execution_time2 = timeit.timeit(lambda: s.dfs(cities, startCity, endCity, pr_path=True, pr_totDist=True), number=1)
+print("Execution time: ", execution_time2)
+
+# Uniform Cost Search
+execution_time3 = timeit.timeit(lambda: s.ucs(cities, startCity, endCity, pr_path=True, pr_totDist=True), number=1)
+print("Execution time: ", execution_time3)
