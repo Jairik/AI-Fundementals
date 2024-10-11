@@ -33,7 +33,7 @@ class uninformedsearch:
                     total_distance = 0
                     for i in range(len(path)-1):
                         total_distance += cities[path[i]][path[i+1]]
-                    print("\nTotal BFS Distance: ", total_distance) 
+                    print("Total BFS Distance: ", total_distance) 
                 return
             for neighbor in cities[current]:
                 if neighbor not in visited:
