@@ -24,7 +24,7 @@ cities = {
     'Philadelphia': {'New York': 94, 'Pittsburg': 304,
                      'Baltimore': 101, 'Salisbury': 138},
     'Baltimore': {'Pittsburg': 248, 'Philadelphia': 101,
-                  'Salisbury': 117, 'Washington DC': 45},
+                  'Washington DC': 45, 'Salisbury': 117},
     'Washington DC': {'Baltimore': 45, 'Salisbury': 116,
                       'Richmond': 110},
     'Salisbury': {'Philadelphia': 138, 'Baltimore': 117,

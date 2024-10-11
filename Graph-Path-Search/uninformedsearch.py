@@ -8,7 +8,8 @@
     pr_path- Boolean for printing the path
     pr_totDist- Boolean for printing the total distance of pat'''
         
-#TODO: BFS+DFS+UCS algorithms implementation
+import heapq  # Simplified UCS implementation
+
 
 class uninformedsearch:
     
@@ -39,31 +40,46 @@ class uninformedsearch:
     
     '''Depth First Search'''
     def dfs(self, cities: dict[str, dict[str, int]], start: str, end: str, pr_path: bool, pr_totDist: bool):
-        stack = [start]
-        if pr_path:
-            print(start, end=" ")
+        stack = [(start, 0, [start])]
         visited = set()
-        total_distance = 0
         while stack:
-            current = stack.pop()
+            current, current_distance, path = stack.pop()
             if current == end: # Check if current city is target
+                    if pr_path:
+                        print(" -> ".join(path))
                     if pr_totDist:
-                        print("\nTotal DFS Distance: ", total_distance)
+                        print("Total DFS Distance: ", current_distance)
                     return
             if current not in visited:
                 visited.add(current)
                 # Check each neighbor and it's weight
                 for neighbor, weight in reversed(cities[current].items()):
                     if neighbor not in visited:
-                        if pr_path:
-                            if pr_path:
-                                print("->", neighbor, end=" ")
-                        total_distance += weight
-                        stack.append(neighbor)
-                    
-    
+                        stack.append((neighbor, current_distance + weight, path + [neighbor]))
+                        
     
     
     '''Uniform Cost Search'''
     def ucs(self, cities: dict[str, dict[str, int]], start: str, end: str, pr_path: bool, pr_totDist: bool):
-        pass
+        queue = [(start, 0, [])]
+        visited = set()
+        while queue:
+            # Pop the city with the smallest cost
+            current, current_distance, path = heapq.heappop(queue)
+            if current in visited:  # If city already visited, skip to next one
+                continue 
+            visited.add(current)
+            path = path + [current]
+            if current == end:
+                if pr_path:
+                    print(" -> ".join(path))
+                if pr_totDist:
+                    print("Total UCS Distance: ", total_distance)
+                    return
+            # Expand neighbors
+            for neighbor, weight in cities[current].items():
+                if neighbor not in visited:
+                    total_distance = current_distance + weight
+                    heapq.heappush(queue, (neighbor, total_distance, path))
+                    
+            
