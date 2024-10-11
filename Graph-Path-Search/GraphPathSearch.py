@@ -1,4 +1,4 @@
-''' - Main function - JJ McCauley - '''
+''' - Demo Program - JJ McCauley - '''
 
 import timeit
 from uninformedsearch import uninformedsearch
@@ -34,17 +34,13 @@ cities = {
 }
 
 # Getting start and end cities from user
-'''
 startCity = input("Enter Start City: ")
 while startCity not in cities:
     startCity = input("ERROR - Start City not found. Please try again: ")
 endCity = input("Enter End City: ")
 while endCity not in cities:
     endCity = input("ERROR - End city not found. Please try again: ")
-'''
-# Hardcoded for debugging purposes
-startCity = 'Boston'
-endCity = 'Salisbury'
+
 
 # Create uninformedsearch object to use searches in module
 s = uninformedsearch()
