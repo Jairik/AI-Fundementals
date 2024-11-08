@@ -6,6 +6,7 @@ from PyQt5.QtCore import Qt
 from functools import partial  # Passing extra parameters through clicked buttons
 import sys
 import random as rand  # Shuffling board
+from time import sleep 
 
 # Global Constants
 BOARD_SIZE = 4
@@ -86,8 +87,8 @@ def main():
     global b_pos, move_count, grid  # Declare b_pos as global for correct referencing
     
     # Getting the solvable board
-    #board = make_board()
-    board = [[1, 0, 2, 3], [5, 6, 7, 4], [9, 10, 11, 8], [13, 14, 15, 12]]  # Hardcoded test case
+    board = make_board()
+    #board = [[1, 0, 2, 3], [5, 6, 7, 4], [9, 10, 11, 8], [13, 14, 15, 12]]  # Hardcoded test case
     
     # Creating grid layouts
     top_grid = QGridLayout()  # Top grid for displaying moves made and instructions button
@@ -132,14 +133,20 @@ def main():
             
             buttons[i][j] = button
             button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # Allow for buttons to expand
-            button.clicked.connect(partial(on_num_button_click, i, j, board, moves_label))  # Pass positional paramters to function
+            #button.clicked.connect(partial(on_num_button_click, i, j, board, moves_label))  # Pass positional paramters to function
             grid.addWidget(button, i, j)
             
     # Show the window
     window.setLayout(root_layout)
     window.show()
+    run_bot()
     sys.exit(app.exec_())
      
+'''Run bot - Begins running the autocomplete bot for the puzzle
+Parameters: Board (2d array) '''
+def run_bot():
+    pass     
+
 '''Number Button Click Method - Checks if the current button is adjacent to the blank button.
 If it is, swaps values in board and updates GUI 
 Parameters: i (row of button clicked), j (column of button clicked), board, b_pos (blank button position)'''
