@@ -7,6 +7,7 @@ from functools import partial  # Passing extra parameters through clicked button
 import sys
 import random as rand  # Shuffling board
 from time import sleep 
+from bot import bot  # Defined function for autocompleting puzzle
 
 # Global Constants
 BOARD_SIZE = 4
@@ -15,6 +16,7 @@ buttons = [[None for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)] # Empty
 b_pos = (-1, 1)  # Current space of the blank, removes need for finding during every successful swap
 move_count = 0  # Move counter to be displayed 
 grid = QGridLayout()  # Grid which will hold the buttons
+bot = bot()
 
 '''Determine whether board is solvable
 Parameters: The board list
@@ -139,17 +141,33 @@ def main():
     # Show the window
     window.setLayout(root_layout)
     window.show()
-    run_bot()
+    
+    run_bot(board, moves_label)
     sys.exit(app.exec_())
      
-'''Run bot - Begins running the autocomplete bot for the puzzle
+'''Run bot - Begins running the autocomplete bot for the puzzle using imported bot functions
 Parameters: Board (2d array) '''
-def run_bot():
-    pass     
+def run_bot(board, moves_label):
+    global b_pos, move_count
+    while not is_solved(board):
+        print("Executing Bot Iteration")
+        sleep(2)
+        optimal_i, optimal_j = bot.get_next_move(board, b_pos)  # Retreive the most optimal next move
+        selected_button_number = board[optimal_i][optimal_j]
+        # Swap the number values on the board
+        board[b_pos[0]][b_pos[1]] = board[optimal_i][optimal_j]
+        board[optimal_i][optimal_j] = 0
+        b_pos = (optimal_i, optimal_j)  
+        move_count += 1  # Increment Move Counter
+        # Update GUI elements
+        update_buttons(board)
+        moves_label.setText(f"Moves Made: {move_count}")
+        
+    p_again = is_winner(moves_label)
 
 '''Number Button Click Method - Checks if the current button is adjacent to the blank button.
 If it is, swaps values in board and updates GUI 
-Parameters: i (row of button clicked), j (column of button clicked), board, b_pos (blank button position)'''
+Parameters: i (row of button clicked), j (column of button clicked), board, moves_label'''
 def on_num_button_click(i, j, board, moves_label):
     global b_pos, move_count
     if in_adjacent_row_col(i, j, b_pos):
@@ -179,7 +197,7 @@ def on_num_button_click(i, j, board, moves_label):
             p_again = is_winner(moves_label)
             
 '''Shift Board - Shifts the board at the given index
- Parameters: i (row of click), j (col of click), b_pos (tuple of blankl position), board'''
+ Parameters: i (row of click), j (col of click), board'''
 def shift_board(i, j, board):
     global b_pos
     if i == b_pos[0]:  # Shift row
