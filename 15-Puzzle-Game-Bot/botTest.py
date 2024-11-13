@@ -1,6 +1,6 @@
 from bot import bot
 
-b_pos = (0, 1)
+b_pos = (2, 2)  # Hardcoded for test case
 bot = bot()  # Make a new bot object
 
 def run_bot(board, moves_label):    
@@ -16,6 +16,11 @@ def run_bot(board, moves_label):
         print("Blank position After Make_Next_Move function: ", b_pos)
         print("New board: ", board, "\n")
         
+        # Check if board is solved for easier testing
+        if(board == [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 0]]):
+            print("--- BOARD IS SOLVED!!! ---")
+            return
+        
         # Increment move counter and update the GUI
         #move_count += 1
         #moves_label.setText(f"Moves Made: {move_count}")
@@ -28,5 +33,8 @@ def run_bot(board, moves_label):
     
     
 '''Testing logic'''
-board = [[1, 0, 2, 3], [5, 6, 7, 4], [9, 10, 11, 8], [13, 14, 15, 12]]  # Hardcoded test case
+board = [[4, 2, 3, 1], 
+         [5, 6, 7, 8], 
+         [9, 10, 0, 12], 
+         [13, 14, 11, 15]]  # Hardcoded test case
 run_bot(board, None)
