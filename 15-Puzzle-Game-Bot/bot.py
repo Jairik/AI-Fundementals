@@ -2,6 +2,7 @@
 
 import numpy as np  # Board calculations
 from random import randint, shuffle
+import heapq
 
 class bot:
     
@@ -43,17 +44,14 @@ class bot:
                     target_i, target_j = divmod(tile - 1, 4)  # Get target i, j
                     total_distance += abs(target_i - i) + abs(target_j - j)  # Add the distance of each
                     
-                    # Adding backward weight penalty to tiles not at goal state
+                    # Adding forward weight penalty to tiles not at goal state
                     if i != target_i and j != target_j:
                         total_distance += 1  # Adding forward weight as penalty
-                        
-                    # Adding weight to account for distance to nearest misplaced tile
-                    total_distance += self.get_min_dist_to_misplaced(board, (i, j))
                     
-                    # Penalizing any linear conflicts
+                    # Checking for and penalizing any linear conflicts
                     if target_i == i:  # Linear conflicts in row
-                        for k in range(j+1, 4):  # Checking all rows above
-                            other_tile = board[i][j]
+                        for k in range(j+1, 4):  # Checking all tiles to the right
+                            other_tile = board[i][k]
                             if other_tile != 0:  # Skipping blank space
                                 target_i_other = (other_tile-1) // 4  # Calculating target row of other tile
                                 # Check if other tile belongs in same row and is above it when it should be below, 
@@ -61,13 +59,13 @@ class bot:
                                 if target_i_other == i and other_tile < tile:
                                     total_distance += 2  # Minimum 2 moves to swap
                     if target_j == j:  # Linear conflicts in column
-                        for k in range(i+1, 4):  # Checking all columns to the right
-                            other_tile = board[i][j]
+                        for k in range(i+1, 4):  # Checking all tiles below
+                            other_tile = board[k][j]
                             if other_tile != 0:
-                                target_j_other = (other_tile-1) // 4
+                                target_j_other = (other_tile-1) % 4  # Calculating target column of other tile
                                 # Check if other tile is 'blocking' current tile
                                 if target_j_other == j and other_tile < tile:
-                                    total_distance += 2
+                                    total_distance += 2  # Minimum 2 moves to swap
                     
         return total_distance
     

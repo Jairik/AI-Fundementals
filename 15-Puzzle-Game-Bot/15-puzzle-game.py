@@ -104,7 +104,7 @@ def run_bot(board, moves_label):
         moves_label.setText(f"Moves Made: {move_count}")
         
         # Schedule the next iteration after 5 second sleep
-        QTimer.singleShot(50000, lambda: bot_iteration(board))
+        QTimer.singleShot(200, lambda: bot_iteration(board))
 
     # Start the bot iteration
     bot_iteration(board)
