@@ -2,7 +2,7 @@
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from functools import partial  # Passing extra parameters through clicked buttons
 import sys
 import random as rand  # Shuffling board
@@ -17,6 +17,98 @@ b_pos = (-1, 1)  # Current space of the blank, removes need for finding during e
 move_count = 0  # Move counter to be displayed 
 grid = QGridLayout()  # Grid which will hold the buttons
 bot = bot()
+
+''' GUI interface (PYQT5) & Intra-game Logic '''    
+def main():
+    global b_pos, move_count, grid  # Declare b_pos as global for correct referencing
+    
+    # Getting the solvable board
+    board = make_board()
+    #board = [[1, 0, 2, 3], [5, 6, 7, 4], [9, 10, 11, 8], [13, 14, 15, 12]]  # Hardcoded test case
+    
+    # Creating grid layouts
+    top_grid = QGridLayout()  # Top grid for displaying moves made and instructions button
+    top_grid.setRowStretch(0, 1)  # Allow for row to stretch, improving GUI 
+    
+    # Creating master layout to store on root window
+    root_layout = QVBoxLayout()
+    root_layout.addLayout(top_grid, 2)
+    root_layout.addLayout(grid, 1)
+    
+    # Configuring root window
+    app = QApplication([])
+    window = QWidget()
+    #icon = QIcon("15-puzzle-game-image.png")  # Custom icon for window
+    #window.setWindowIcon(icon)
+    window.setWindowTitle("JJ's 15 Puzzle Game")
+    window.setGeometry(100, 100, 1200, 1200) 
+    window.setStyleSheet("background-color: #1c1c1c;")
+    
+    # Add label displaying move count
+    moves_label = QLabel()
+    moves_label.setText("Welcome!")
+    moves_label.setStyleSheet("color: white; font-size: 45px; font-family: Tahoma;")
+    top_grid.addWidget(moves_label, 0, 0)
+    
+    # Adding a button that displays a pop-up with instructions
+    instructions_button = QPushButton("How to play")
+    instructions_button.setStyleSheet("background-color: #333333; color: white; font-size: 30px; font-family: Tahoma;")
+    instructions_button.clicked.connect(on_help_button_click)
+    top_grid.addWidget(instructions_button, 0, 1)
+    
+    # Adding numbers to grid
+    for i in range(0, BOARD_SIZE):
+        for j in range(0, BOARD_SIZE):
+            if board[i][j] == 0:
+                button = QPushButton(' ')
+                button.setStyleSheet("background-color: #4f2b01; color: black; font-size: 42px;")  # Set blank button formatting
+                b_pos = (i, j)
+            else:
+                button = (QPushButton(f'{board[i][j]}'))
+                button.setStyleSheet("background-color: #333333; color: white; font-size: 42px;")  # Set Number buttons formatting
+            
+            buttons[i][j] = button
+            button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # Allow for buttons to expand
+            #button.clicked.connect(partial(on_num_button_click, i, j, board, moves_label))  # Pass positional paramters to function
+            grid.addWidget(button, i, j)
+            
+    # Show the window
+    window.setLayout(root_layout)
+    window.show()
+    
+    run_bot(board, moves_label)
+    sys.exit(app.exec_())
+     
+'''Run bot - Begins running the autocomplete bot for the puzzle using imported bot functions
+Parameters: Board (2d array) '''
+def run_bot(board, moves_label):    
+    global b_pos, move_count
+    
+    # Define a function for each iteration of the bot's movement
+    def bot_iteration(board):
+        global b_pos, move_count
+        print("\n\nExecuting Bot Iteration #", move_count)
+
+        # Check for win
+        if is_solved(board):
+            QTimer.singleShot(0, lambda: is_winner(moves_label))
+            #TODO: Add play again feature here
+        
+        # Get the optimal move from the bot. Will update board within function (by reference)
+        b_pos, board = bot.make_next_move(board, b_pos)
+        print("Blank position After Make_Next_Move function: ", b_pos)
+        
+        # Increment move counter and update the GUI
+        move_count += 1
+        update_buttons(board)
+        moves_label.setText(f"Moves Made: {move_count}")
+        
+        # Schedule the next iteration after 5 second sleep
+        QTimer.singleShot(50000, lambda: bot_iteration(board))
+
+    # Start the bot iteration
+    bot_iteration(board)
+
 
 '''Determine whether board is solvable
 Parameters: The board list
@@ -83,87 +175,6 @@ def make_board():
     
     return n_board
 
-
-''' GUI interface (PYQT5) & Intra-game Logic '''    
-def main():
-    global b_pos, move_count, grid  # Declare b_pos as global for correct referencing
-    
-    # Getting the solvable board
-    board = make_board()
-    #board = [[1, 0, 2, 3], [5, 6, 7, 4], [9, 10, 11, 8], [13, 14, 15, 12]]  # Hardcoded test case
-    
-    # Creating grid layouts
-    top_grid = QGridLayout()  # Top grid for displaying moves made and instructions button
-    top_grid.setRowStretch(0, 1)  # Allow for row to stretch, improving GUI 
-    
-    # Creating master layout to store on root window
-    root_layout = QVBoxLayout()
-    root_layout.addLayout(top_grid, 2)
-    root_layout.addLayout(grid, 1)
-    
-    # Configuring root window
-    app = QApplication([])
-    window = QWidget()
-    #icon = QIcon("15-puzzle-game-image.png")  # Custom icon for window
-    #window.setWindowIcon(icon)
-    window.setWindowTitle("JJ's 15 Puzzle Game")
-    window.setGeometry(100, 100, 1200, 1200) 
-    window.setStyleSheet("background-color: #1c1c1c;")
-    
-    # Add label displaying move count
-    moves_label = QLabel()
-    moves_label.setText("Welcome!")
-    moves_label.setStyleSheet("color: white; font-size: 45px; font-family: Tahoma;")
-    top_grid.addWidget(moves_label, 0, 0)
-    
-    # Adding a button that displays a pop-up with instructions
-    instructions_button = QPushButton("How to play")
-    instructions_button.setStyleSheet("background-color: #333333; color: white; font-size: 30px; font-family: Tahoma;")
-    instructions_button.clicked.connect(on_help_button_click)
-    top_grid.addWidget(instructions_button, 0, 1)
-    
-    # Adding numbers to grid
-    for i in range(0, BOARD_SIZE):
-        for j in range(0, BOARD_SIZE):
-            if board[i][j] == 0:
-                button = QPushButton(' ')
-                button.setStyleSheet("background-color: #4f2b01; color: black; font-size: 42px;")  # Set blank button formatting
-                b_pos = (i, j)
-            else:
-                button = (QPushButton(f'{board[i][j]}'))
-                button.setStyleSheet("background-color: #333333; color: white; font-size: 42px;")  # Set Number buttons formatting
-            
-            buttons[i][j] = button
-            button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # Allow for buttons to expand
-            #button.clicked.connect(partial(on_num_button_click, i, j, board, moves_label))  # Pass positional paramters to function
-            grid.addWidget(button, i, j)
-            
-    # Show the window
-    window.setLayout(root_layout)
-    window.show()
-    
-    run_bot(board, moves_label)
-    sys.exit(app.exec_())
-     
-'''Run bot - Begins running the autocomplete bot for the puzzle using imported bot functions
-Parameters: Board (2d array) '''
-def run_bot(board, moves_label):
-    global b_pos, move_count
-    while not is_solved(board):
-        print("Executing Bot Iteration")
-        sleep(2)
-        optimal_i, optimal_j = bot.get_next_move(board, b_pos)  # Retreive the most optimal next move
-        selected_button_number = board[optimal_i][optimal_j]
-        # Swap the number values on the board
-        board[b_pos[0]][b_pos[1]] = board[optimal_i][optimal_j]
-        board[optimal_i][optimal_j] = 0
-        b_pos = (optimal_i, optimal_j)  
-        move_count += 1  # Increment Move Counter
-        # Update GUI elements
-        update_buttons(board)
-        moves_label.setText(f"Moves Made: {move_count}")
-        
-    p_again = is_winner(moves_label)
 
 '''Number Button Click Method - Checks if the current button is adjacent to the blank button.
 If it is, swaps values in board and updates GUI 

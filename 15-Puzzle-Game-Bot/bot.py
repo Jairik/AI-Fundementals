@@ -1,67 +1,108 @@
 ''' Class that holds AI functionality - JJ McCauley - 11/7/24 '''
 
 import numpy as np  # Board calculations
-import heapq  # A* Search
+from random import randint as random
 
 class bot:
     
-    global TARGETB  # Hold the target board
-    global total_cost  # Total cost variable to increment throughout
-    global last_cost  # Holds the previous cost to avoid any loops
-    
     ''' Initialize variables on create '''
     def __init__(self):
-        global total_cost, TARGETB, last_cost
-        TARGETB = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 0]])  # Target Board
-        total_cost = 0
-        last_cost = 999  # Signal Value
-    
-    '''Calculates Hueristic function based on Manhattan Distance'''
-    def hueristic(self, board, x, y):
-        global TARGETB
-        target_cords = np.where(TARGETB == board[x][y])  # Returns an array of row and column indices found
-        print("target cords: ", target_cords)
-        # Return manhattan distance
-        return (abs(target_cords[0][0] - x) + abs(target_cords[1][0] - y))
+        self.total_cost = 0
+        self.visited = set()
+        self.lastmove = None
+        
+    '''Calculates heuristic function based on Manhattan Distance'''
+    def heuristic(self, board):
+        total_distance = 0
+        for i in range(4):
+            for j in range(4):
+                tile = board[i][j]
+                if tile != 0:
+                    target_i, target_j = divmod(tile - 1, 4)
+                    total_distance += abs(target_i - i) + abs(target_j - j)
+        return total_distance
     
     '''Gets Adjancent from provided blankspace
-    Helper for A* Search, return a list of tuples of adjacent tiles w/ movement vector'''
+    Helper for A* Search, return a list of tuples of adjacent tiles'''
     def get_adjacent(self, cords: tuple):
         adjacent_cords = []
-        if cords[0] < 3: adjacent_cords.append((cords[0]+1, cords[1], (1, 0)))  # Move down
-        if cords[0] > 0: adjacent_cords.append((cords[0]-1, cords[1], (-1, 0)))  # Move up
-        if cords[1] < 3: adjacent_cords.append((cords[0], cords[1]+1, (0, 1)))  # Move right
-        if cords[1] > 0: adjacent_cords.append((cords[0], cords[1]-1, (0, -1)))  # Move left
+        if cords[0] < 3: adjacent_cords.append((cords[0]+1, cords[1]))  # Move down
+        if cords[0] > 0: adjacent_cords.append((cords[0]-1, cords[1]))  # Move up
+        if cords[1] < 3: adjacent_cords.append((cords[0], cords[1]+1))  # Move right
+        if cords[1] > 0: adjacent_cords.append((cords[0], cords[1]-1))  # Move left
         return adjacent_cords
     
-    '''Calculates next move using A* Search, returning the coordinates of the next 
-    Parameters: current board (2d array) and coordinates of blank space'''
-    def get_next_move(self, board, cords: tuple):
-        print("--BOARD--\n", board, "\n-------")
-        global total_cost
-        adjacent_cords = self.get_adjacent(cords)  # Get list of tuples of adjacent squares
-        adjacent_cords_costs = np.array([])
-        total_cost+= 1
+    '''Calculates next move using A* Search, returning the new blank space and the updated board
+    Parameters: current board (2d list) and coordinates of blank space '''
+    def make_next_move(self, board, cords: tuple):
+        
+        adjacent_cords = self.get_adjacent(cords)  # Get list of tuples of adjacent tiles
+        print("Blank Position: ", cords)
+        print("Adjacent Tiles: ", adjacent_cords)
+        self.total_cost+= 1
+        moves = []  # Store the avaialble moves that have not yet been visited
+        board_tuple = None  # Initialize to avoid comparison errors
+        
         # Simulate the cost of each movement
         for pos in adjacent_cords:
-            simulated_board = board.copy()
-            x_swap_offset, y_swap_offset = pos[2][0], pos[2][1]  # Coordinates of number to swap with
-            # Determine grid position of indexes to swap
-            x_swap_cord = pos[0] + x_swap_offset
-            y_swap_cord = pos[1] + y_swap_offset
+            if(pos == self.lastmove):  # Avoid revisiting the direct last move
+                continue  # Move onto next iteration
+            
+            simulated_board = [row[:] for row in board]  # Deep copy
+            x_blank, y_blank = cords
+                        
             # Swap given indexes on temporary board
-            tempx, tempy = simulated_board[cords[0]], simulated_board[cords[1]]
-            simulated_board[cords[0]], simulated_board[cords[1]] = simulated_board[x_swap_cord], simulated_board[y_swap_cord]
-            simulated_board[x_swap_cord], simulated_board[y_swap_cord] = tempx, tempy
-            hCost = self.hueristic(simulated_board, x_swap_cord, y_swap_cord)  # Get hueristic cost
-            adjacent_cords_costs = np.append(adjacent_cords_costs, (hCost + total_cost))
-        # Get minimum cost
-        min_index = (np.argmin(adjacent_cords_costs))
-        # Check for duplicate move to avoid repeating moves
-        while adjacent_cords_costs[min_index] == last_cost-1: 
-            adjacent_cords_costs = np.delete(adjacent_cords_costs, min_index)
-            min_index = (np.argmin(adjacent_cords_costs))
-        # Return coordinates to optimal tile to move
-        min_i, min_j = adjacent_cords[min_index][0], adjacent_cords[min_index][1]
-        print(f"Optimal Indexes to Swap: {min_i}, {min_j}")
-        return min_i, min_j
+            simulated_board[x_blank][y_blank], simulated_board[pos[0]][pos[1]] = \
+            simulated_board[pos[0]][pos[1]], simulated_board[x_blank][y_blank]
+            
+            # Check to see if state has already been visited
+            simulated_board_tuple = tuple(tuple(row) for row in simulated_board)  # Convert to hashable object
+            if simulated_board_tuple in self.visited: 
+                continue  # Skip and move onto next iteration
+            
+            # Calculate costs and add to adjacent_cord_costs
+            hCost = self.heuristic(simulated_board)  # Get heuristic cost
+            cur_cost = (hCost + 1)
+            moves.append((cur_cost, pos, simulated_board, simulated_board_tuple))
+
+        # If moves is not empty, choose the best one
+        if moves != []:
+            # Get minimum cost
+            min_cost = min(moves, key=lambda x: x[0])[0]
+            best_moves = [move for move in moves if move[0] == min_cost]
+            
+            # If same costs, select move that won't go back to last state
+            for move in best_moves:
+                if move[1] != self.lastmove:
+                    selected_move = move
+                    break
+                else:
+                    selected_move = best_moves[0]
+            cost, (min_i, min_j), new_board, board_tuple = selected_move 
+        # If moves is empty, select a random adjacent tile to swap with
+        else:
+            print("SELECTING RANDOM TILE")
+            random_tile_index = random(0, len(adjacent_cords))
+            random_tile = adjacent_cords[random_tile_index]
+            # Calculate cost of tile
+            simulated_board = [row[:] for row in board]  # Deep copy of board
+            x_blank, y_blank = cords 
+            simulated_board[x_blank][y_blank], simulated_board[random_tile[0]][random_tile[1]] = \
+            simulated_board[random_tile[0]][random_tile[1]], simulated_board[x_blank][y_blank]
+            hCost = self.heuristic(simulated_board)  # Get heuristic cost
+            cost = (hCost + 1)
+            min_i, min_j, new_board = random_tile[0], random_tile[1], simulated_board
+        
+        # Swap coordinates on the actual board
+        board[:] = new_board[:]  # Deep copy board
+
+        # Add current board to visited set, if new configuration
+        if board_tuple:
+            self.visited.add(board_tuple)
+        
+        # Return swapped indexes and updated board
+        print("Min i,j: ", min_i, ",", min_j, "  -  WITH COST OF: ", cost)
+        print("Moves: ", moves)
+        print("Visited: ", self.visited)
+        self.lastmove = (x_blank, y_blank)
+        return (min_i, min_j), board
